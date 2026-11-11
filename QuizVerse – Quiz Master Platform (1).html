@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>QuizVerse – Quiz Master Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fffdf5;--card:rgba(255,255,255,.75);--tx:#1c2b2d;--mut:#6b7a7c;--ac:#ff6b6b;--bd:#1c2b2d;--sh:rgba(28,43,45,.15);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10202a;--card:rgba(255,255,255,.07);--tx:#f4f1e6;--mut:#9fb3b8;--bd:#f4f1e6;--sh:rgba(0,0,0,.4)}}
+:root[data-theme="dark"]{--bg:#10202a;--card:rgba(255,255,255,.07);--tx:#f4f1e6;--mut:#9fb3b8;--bd:#f4f1e6;--sh:rgba(0,0,0,.4)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;font-family:Fredoka,system-ui,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}
+body{background-image:radial-gradient(circle at 10% 0,#ff6b6b33,transparent 40%),radial-gradient(circle at 90% 100%,#4ecdc433,transparent 40%)}
+h1,h2,h3{margin:.3em 0}button,input,select{font:inherit;color:inherit}
+.btn{background:var(--ac);color:#fff;border:3px solid var(--bd);border-radius:14px;padding:8px 16px;cursor:pointer;font-weight:700;box-shadow:0 4px 0 var(--bd);transition:.15s}
+.btn:hover{transform:translateY(-2px)}.btn:active{transform:translateY(3px);box-shadow:none}.btn.g{background:#2bb673}.btn.b{background:#3b9cff}.btn.y{background:#ffc83d;color:#1c2b2d}.btn.s{padding:4px 10px;font-size:.85em}
+input,select{background:var(--card);border:3px solid var(--bd);border-radius:12px;padding:9px 12px;width:100%;margin:4px 0}
+.card{background:var(--card);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:2px solid var(--sh);border-radius:20px;padding:16px;box-shadow:0 8px 24px var(--sh)}
+.tilt{transition:transform .2s;transform-style:preserve-3d}.tilt:hover{transform:perspective(700px) rotateX(5deg) rotateY(-6deg) translateY(-4px)}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.app{display:flex;min-height:100vh}.side{width:210px;padding:14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px;border-right:2px solid var(--sh)}
+.side a{padding:12px 14px;font-size:1.1em;border-radius:12px;cursor:pointer;font-weight:600}.side a:hover,.side a.on{background:var(--ac);color:#fff}
+.main{flex:1;padding:18px;min-width:0;animation:in .4s}@keyframes in{from{opacity:0;transform:translateY(10px)}}
+.logo{font-size:1.6em;font-weight:700;color:var(--ac);text-shadow:2px 2px 0 var(--bd)}
+.big{font-size:1.8em;font-weight:700}.mut{color:var(--mut)}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;background:var(--ac);color:#fff;font-size:.8em;margin:2px}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:8px;border-bottom:1px solid var(--sh);font-size:.92em}.scroll{overflow-x:auto}
+.bar{height:14px;background:var(--sh);border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ac);transition:width .6s}
+.opt{display:block;width:100%;text-align:left;margin:8px 0;background:var(--card);border:3px solid var(--bd);border-radius:14px;padding:12px;cursor:pointer}.opt.sel{background:var(--ac);color:#fff}.opt.ok{background:#2bb673;color:#fff}.opt.no{background:#e04848;color:#fff}
+.auth{max-width:420px;margin:20px auto;padding:14px}.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.cube{width:140px;height:140px;margin:60px auto;position:relative;transform-style:preserve-3d;animation:spin 9s linear infinite}
+.cube div{position:absolute;width:140px;height:140px;display:flex;align-items:center;justify-content:center;background:var(--card);border:3px solid var(--bd);border-radius:18px}
+@keyframes spin{to{transform:rotateX(360deg) rotateY(360deg)}}
+.scene{perspective:900px;height:270px}
+.toast{position:fixed;right:14px;bottom:14px;background:#2bb673;color:#fff;padding:10px 16px;border-radius:14px;border:3px solid var(--bd);z-index:9}
+.ov{position:fixed;inset:0;background:#0009;display:flex;align-items:center;justify-content:center;z-index:20;padding:14px}.mdl{width:min(100%,400px);background:var(--bg);animation:in .25s}
+@media(max-width:700px){.app{flex-direction:column}.side{width:100%;height:auto;position:static;flex-direction:row;flex-wrap:wrap;border:0}}
+</style></head><body><div id="root"></div>
+<script>
+const $=s=>document.querySelector(s),KEY='quizverse_v1';
+const H=s=>{let h=5381;for(const c of s)h=(h*33^c.charCodeAt(0))>>>0;return h.toString(36)};
+const SKIN=['#ffd9b3','#f1c27d','#c68642','#8d5524'],BG=['#ffb3b3','#b3e0ff','#c9f2c7','#ffe9a8','#e2c6ff','#ffcf9e','#a8f0e6','#f7b6e0'],HAIR=['#3a2a1e','#e85d04','#222','#7b2cbf','#f9c74f','#4361ee','#2a9d8f','#d62828'];
+const FRAMES=['#1c2b2d','#ffc83d','#3b9cff','#2bb673','#ff6b6b','#b66dff'],NCOL=['','#e04848','#2b8bff','#2bb673','#b66dff','#e8a900'],THEMES=['#ff6b6b','#3b9cff','#2bb673','#b66dff','#ff9f1c','#e83e8c'];
+const ITEMS=[...[...Array(8)].map((_,i)=>({t:'av',v:i,n:'Character '+(i+1),c:i?60+i*20:0})),...THEMES.map((_,i)=>({t:'theme',v:i,n:'Theme '+(i+1),c:i?80:0})),...FRAMES.map((_,i)=>({t:'frame',v:i,n:'Frame '+(i+1),c:i?50:0})),...NCOL.map((_,i)=>({t:'col',v:i,n:'Name color '+(i+1),c:i?40:0}))];
+const QB=[['Geography','Capital of Japan?',['Tokyo','Seoul','Kyoto','Osaka'],0],['Geography','Largest ocean?',['Atlantic','Pacific','Indian','Arctic'],1],['Science','Chemical symbol for gold?',['Ag','Au','Gd','Go'],1],['Science','Planet closest to the Sun?',['Venus','Earth','Mercury','Mars'],2],['Science','Plants absorb which gas?',['Oxygen','Nitrogen','CO₂','Helium'],2],['History','First US president?',['Lincoln','Washington','Adams','Jefferson'],1],['History','Great Wall is in?',['India','Japan','Egypt','China'],3],['Maths','12 × 12 = ?',['124','144','134','122'],1],['Maths','Square root of 81?',['7','8','9','11'],2],['Languages','“Gracias” means?',['Hello','Thanks','Sorry','Goodbye'],1],['Sports','Players in a football (soccer) team?',['9','10','11','12'],2],['Literature','Who wrote Hamlet?',['Dickens','Shakespeare','Austen','Twain'],1]];
+let DB,S={u:null,v:'dash',tab:'student'},Q=null,TM=null;
+function load(){try{DB=JSON.parse(localStorage.getItem(KEY))}catch(e){}if(!DB)seed()}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}}
+function mk(o){return Object.assign({role:'student',on:true,coins:0,xp:0,av:0,frame:0,col:0,theme:0,photo:'',own:['av0','theme0','frame0','col0'],last:Date.now(),streak:0,claim:0,logins:[Date.now()]},o)}
+function seed(){const n=[['Nova Patel','nova','Green Valley','10A'],['Leo Chen','leo','Green Valley','10B'],['Maya Singh','maya','Sunrise High','9A'],['Ravi Kumar','ravi','Sunrise High','10A'],['Zoe Adams','zoe','Green Valley','10A']];
+DB={users:[mk({id:'ADM-0001',u:'admin',name:'Administrator',pw:H('admin123'),role:'admin'}),mk({id:'QM-0001',u:'master',name:'Quiz Master',pw:H('master123'),role:'master'}),...n.map((x,i)=>mk({id:'STU-'+(1001+i),u:x[1],name:x[0],pw:H('pass123'),school:x[2],cls:x[3],email:x[1]+'@mail.com',mob:'90000000'+i,roll:i+1,gender:'Other',dob:'2010-01-01',coins:100+i*55,xp:80+i*130,av:(i+1)%8,own:['av0','theme0','frame0','col0','av'+((i+1)%8)]}))],hist:[],qs:QB.map(q=>q.slice()),notes:['Welcome to QuizVerse! Win coins by completing quizzes.']};
+DB.users.filter(u=>u.role=='student').forEach((u,i)=>{for(let k=0;k<4+i;k++){const t=5,s=Math.max(1,Math.round(Math.random()*5));DB.hist.push({u:u.u,s,t,sub:QB[(k*3+i)%QB.length][0],d:Date.now()-k*864e5*(1+i%3)*2})}});save()}
+const U=()=>DB.users.find(x=>x.u==S.u);
+const lvl=x=>Math.floor(x/100)+1;
+function stats(u){const h=DB.hist.filter(x=>x.u==u);const s=h.reduce((a,b)=>a+b.s,0),t=h.reduce((a,b)=>a+b.t,0);return{n:h.length,s,acc:t?Math.round(100*s/t):0,h}}
+function ranked(sc='all',me){const now=Date.now(),w={weekly:7,monthly:30,yearly:365}[sc];let us=DB.users.filter(u=>u.role=='student'&&u.on);
+if(sc=='school')us=us.filter(u=>u.school==me.school);if(sc=='class')us=us.filter(u=>u.school==me.school&&u.cls==me.cls);if(sc=='friends')us=us.filter(u=>u.cls==me.cls||u.u==me.u);
+return us.map(u=>{let h=DB.hist.filter(x=>x.u==u.u&&(!w||now-x.d<w*864e5));const s=h.reduce((a,b)=>a+b.s,0),t=h.reduce((a,b)=>a+b.t,0);return{u,s,acc:t?Math.round(100*s/t):0}}).sort((a,b)=>b.s-a.s||b.u.xp-a.u.xp)}
+const rank=u=>ranked().findIndex(r=>r.u.u==u.u)+1;
+function av(u,sz=56,frame){const i=typeof u=='number'?u:u.av,f=FRAMES[frame??(u.frame||0)];
+if(u.photo)return`<img src="${u.photo}" style="width:${sz}px;height:${sz}px;border-radius:50%;object-fit:cover;border:4px solid ${f}">`;
+const sk=SKIN[i%4],hr=HAIR[i],ac=i%4;
+return`<svg width="${sz}" height="${sz}" viewBox="0 0 100 100" style="border-radius:50%;border:4px solid ${f};background:${BG[i]}"><circle cx="50" cy="56" r="30" fill="${sk}"/>${ac==0?`<path d="M20 50Q22 20 50 22Q78 20 80 50Q60 36 20 50Z" fill="${hr}"/>`:ac==1?`<path d="M22 36L30 12L44 28ZM78 36L70 12L56 28Z" fill="${hr}"/><path d="M22 50Q30 26 50 28Q70 26 78 50Q50 38 22 50Z" fill="${hr}"/>`:ac==2?`<path d="M18 52Q20 16 50 18Q80 16 82 52Q70 30 50 34Q30 30 18 52Z" fill="${hr}"/><rect x="12" y="46" width="10" height="18" rx="5" fill="#333"/><rect x="78" y="46" width="10" height="18" rx="5" fill="#333"/>`:`<circle cx="50" cy="24" r="12" fill="${hr}"/><path d="M22 48Q30 28 50 30Q70 28 78 48Q50 38 22 48Z" fill="${hr}"/>`}<circle cx="39" cy="56" r="5" fill="#222"/><circle cx="61" cy="56" r="5" fill="#222"/><circle cx="41" cy="54" r="1.8" fill="#fff"/><circle cx="63" cy="54" r="1.8" fill="#fff"/>${i%2?`<rect x="30" y="49" width="18" height="14" rx="6" fill="none" stroke="#222" stroke-width="2.5"/><rect x="52" y="49" width="18" height="14" rx="6" fill="none" stroke="#222" stroke-width="2.5"/>`:''}<path d="M40 70Q50 80 60 70" stroke="#222" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="32" cy="66" r="4" fill="#ff8fa3" opacity=".6"/><circle cx="68" cy="66" r="4" fill="#ff8fa3" opacity=".6"/></svg>`}
+const nm=u=>`<b style="color:${NCOL[u.col]||'inherit'}">${u.u}</b>`;
+function qr(id){let h=parseInt(H(id),36),g='',N=21;const fin=(x,y)=>(x<7&&y<7)||(x>13&&y<7)||(x<7&&y>13);
+for(let y=0;y<N;y++)for(let x=0;x<N;x++){let on;if(fin(x,y)){const a=x%14,b=y%14;on=!(a==1||a==5||b==1||b==5)||(a>=2&&a<=4&&b>=2&&b<=4)}else{h=(h*1103515245+12345+x*7+y)>>>0;on=(h>>>16)&1}if(on)g+=`<rect x="${x}" y="${y}" width="1" height="1"/>`}
+return`<svg width="110" height="110" viewBox="-1 -1 23 23" style="background:#fff;border-radius:8px;padding:2px"><g fill="#000">${g}</g></svg>`}
+function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.append(t);setTimeout(()=>t.remove(),2200)}
+function theme(){const u=S.u&&U();document.documentElement.style.setProperty('--ac',u?THEMES[u.theme]:'#ff6b6b')}
+function toggleDark(){const r=document.documentElement,d=r.dataset.theme=='dark'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches);r.dataset.theme=d?'light':'dark'}
+function cube(){return`<div class="scene"><div class="cube">${[0,1,2,3,4,5].map(i=>`<div style="transform:${['rotateY(0)','rotateY(90deg)','rotateY(180deg)','rotateY(-90deg)','rotateX(90deg)','rotateX(-90deg)'][i]} translateZ(70px)">${av(i+1,124,i)}</div>`).join('')}</div></div>`}
+/* AUTH */
+function authView(){const t=S.tab;let f='';
+if(t=='reg')f=`<input id="rn" placeholder="Full name"><input id="ru" placeholder="Unique username"><input id="rp" type="password" placeholder="Password"><input id="rc" type="password" placeholder="Confirm password"><input id="rm" placeholder="Mobile"><input id="re" type="email" placeholder="Email"><input id="rs" placeholder="School/College"><input id="rcl" placeholder="Class"><input id="rr" placeholder="Roll number"><select id="rg"><option>Male</option><option>Female</option><option>Other</option></select><label class="mut">Date of birth</label><input id="rd" type="date"><label class="mut">Profile photo</label><input id="rf" type="file" accept="image/*"><button class="btn g" onclick="reg()">Create account</button>`;
+else if(t=='forgot')f=`<input id="fu" placeholder="Username"><input id="fe" placeholder="Registered email"><input id="fp" type="password" placeholder="New password"><button class="btn b" onclick="forgot()">Reset password</button>`;
+else f=`<input id="lu" placeholder="Username"><input id="lp" type="password" placeholder="Password"><button class="btn" onclick="login()">Login as ${t=='student'?'Student':t=='master'?'Quiz Master':'Admin'}</button>`;
+return`<div class="auth card"><div style="text-align:center"><div class="logo">QUIZVERSE</div>${cube()}</div><div class="tabs">${[['student','Student'],['reg','Register'],['master','Quiz Master'],['admin','Admin'],['forgot','Forgot?']].map(x=>`<button class="btn s ${S.tab==x[0]?'y':''}" onclick="S.tab='${x[0]}';render()">${x[1]}</button>`).join('')}</div>${f}</div>`}
+function login(){const u=DB.users.find(x=>x.u==$('#lu').value.trim()&&x.pw==H($('#lp').value));const want=S.tab=='student'?'student':S.tab;
+if(!u||u.role!=want)return toast('Invalid credentials');if(!u.on)return toast('Account disabled');
+u.last=Date.now();u.logins.push(u.last);save();S.u=u.u;S.v=u.role=='student'?'dash':u.role=='admin'?'adm':'qs';theme();render()}
+function reg(){const g=i=>$('#'+i).value.trim(),u=g('ru');
+if(!g('rn')||!u||!g('rp'))return toast('Fill required fields');if(DB.users.some(x=>x.u.toLowerCase()==u.toLowerCase()))return toast('Username already taken');
+if(g('rp')!=$('#rc').value)return toast('Passwords do not match');
+const fin=ph=>{const n=DB.users.filter(x=>x.role=='student').length+1001;DB.users.push(mk({id:'STU-'+n,u,name:g('rn'),pw:H(g('rp')),mob:g('rm'),email:g('re'),school:g('rs')||'—',cls:g('rcl')||'—',roll:g('rr'),gender:g('rg'),dob:g('rd'),photo:ph,coins:50}));save();S.tab='student';render();toast('Registered! Student ID STU-'+n)};
+const f=$('#rf').files[0];if(f){const r=new FileReader();r.onload=()=>fin(r.result);r.readAsDataURL(f)}else fin('')}
+function forgot(){const u=DB.users.find(x=>x.u==$('#fu').value&&x.email==$('#fe').value);if(!u||!$('#fp').value)return toast('Details do not match');u.pw=H($('#fp').value);save();S.tab='student';render();toast('Password reset')}
+function logout(){clearInterval(TM);S.u=null;S.tab='student';theme();render()}
+/* LAYOUT */
+const NAV={student:[['dash','🏠 Dashboard'],['quiz','🎮 Play Quiz'],['board','🏆 Leaderboard'],['shop','🛍️ Shop'],['badges','🏅 Badges'],['stats','📊 Analytics'],['me','🪪 My ID']],admin:[['adm','👥 Students'],['aan','📈 Analytics'],['qs','❓ Questions'],['board','🏆 Leaderboard']],master:[['qs','❓ Questions'],['board','🏆 Leaderboard'],['aan','📈 Analytics']]};
+function render(){const r=$('#root');if(!S.u){r.innerHTML=authView();return}
+const u=U();clearInterval(TM);if(S.v!='play')Q=Q&&Q.done?Q:null;
+r.innerHTML=`<div class="app"><nav class="side"><div class="logo">QUIZVERSE</div>${NAV[u.role].map(n=>`<a class="${S.v==n[0]?'on':''}" onclick="go('${n[0]}')">${n[1]}</a>`).join('')}<a onclick="toggleDark()">🌓 Dark / Light</a><a onclick="logout()">🚪 Logout</a></nav><main class="main">${view(u)}</main></div>`;if(S.v=='play')tick()}
+function go(v){S.v=v;if(v=='quiz')Q=null;render()}
+function view(u){return({dash,quiz,play,board,shop,badges,stats,me,adm,aan,qs})[S.v](u)}
+/* STUDENT */
+function dash(u){const lv=lvl(u.xp),can=Date.now()-u.claim>864e5,h=stats(u.u).h.slice(-3).reverse();
+return`<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">${av(u,70)}<div><h2>Welcome back, ${nm(u)}! 👋</h2><span class="mut">${u.id} · ${u.school} ${u.cls}</span></div></div>
+<div class="grid" style="margin:14px 0">${[['🪙 Coins',u.coins],['⚡ XP',u.xp],['⭐ Level',lv],['🏆 Rank','#'+rank(u)]].map(x=>`<div class="card tilt"><div class="mut">${x[0]}</div><div class="big">${x[1]}</div></div>`).join('')}</div>
+<div class="bar" style="margin-bottom:14px"><i style="width:${u.xp%100}%"></i></div>
+<div class="grid"><div class="card tilt"><h3>🎁 Daily reward</h3><p class="mut">Streak: ${u.streak} days</p><button class="btn y" ${can?'':'disabled'} onclick="daily()">${can?'Claim 20 coins':'Come back tomorrow'}</button></div>
+<div class="card tilt"><h3>🔔 Notifications</h3>${DB.notes.slice(-3).reverse().map(n=>`<p>📢 ${n}</p>`).join('')}<p>📝 New quiz available!</p></div>
+<div class="card tilt"><h3>Recent quizzes</h3>${h.map(x=>`<p>${x.sub}: <b>${x.s}/${x.t}</b></p>`).join('')||'<p class="mut">None yet</p>'}<h3>Upcoming</h3><p class="mut">Weekly Challenge – Saturday</p></div>
+<div class="card tilt"><h3>Leaderboard</h3>${ranked().slice(0,4).map((r,i)=>`<p>${i+1}. ${nm(r.u)} – ${r.s} pts</p>`).join('')}</div></div>`}
+function daily(){const u=U();u.claim=Date.now();u.coins+=20;u.xp+=10;u.streak++;save();toast('+20 🪙 +10 XP');render()}
+function quiz(u){const subs=[...new Set(DB.qs.map(q=>q[0]))];
+return`<h2>🎮 Start a quiz</h2><div class="card" style="max-width:480px"><label>Subject</label><select id="qsub"><option>All</option>${subs.map(s=>`<option>${s}</option>`).join('')}</select><label><input type="checkbox" id="qneg" style="width:auto"> Negative marking (−0.25)</label><br><label><input type="checkbox" id="qfs" style="width:auto"> Full-screen mode</label><br><br><button class="btn g" onclick="startQ()">Start (5 questions, 90s)</button></div>
+${Q&&Q.done?review():''}`}
+function startQ(){const s=$('#qsub').value,neg=$('#qneg').checked;let p=DB.qs.filter(q=>s=='All'||q[0]==s).sort(()=>Math.random()-.5).slice(0,5);
+if(!p.length)return toast('No questions');
+Q={qs:p.map(q=>{const o=q[2].map((t,i)=>[t,i==q[3]]).sort(()=>Math.random()-.5);return{sub:q[0],q:q[1],o}}),i:0,a:[],bm:{},t:90,neg,sub:s};
+if($('#qfs').checked)document.documentElement.requestFullscreen?.().catch(()=>{});S.v='play';render()}
+function play(){if(!Q)return'';const q=Q.qs[Q.i];
+return`<div class="card" style="max-width:640px;margin:auto"><div style="display:flex;justify-content:space-between"><b>Question ${Q.i+1}/${Q.qs.length}</b><b id="tm">⏱ ${Q.t}s</b></div><div class="bar" style="margin:8px 0"><i style="width:${Q.i/Q.qs.length*100}%"></i></div><h2>${q.q}</h2>${q.o.map((o,i)=>`<button class="opt ${Q.a[Q.i]===i?'sel':''}" onclick="Q.a[Q.i]=${i};render()">${o[0]}</button>`).join('')}
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn s y" onclick="Q.bm[Q.i]=!Q.bm[Q.i];toast(Q.bm[Q.i]?'Bookmarked':'Removed')">${Q.bm[Q.i]?'★':'☆'} Bookmark</button><button class="btn s" onclick="Q.i=Math.max(0,Q.i-1);render()">← Prev</button>${Q.i<Q.qs.length-1?`<button class="btn s b" onclick="Q.i++;render()">Next →</button>`:`<button class="btn s g" onclick="finish()">Submit</button>`}</div>
+<p class="mut">Bookmarked: ${Object.keys(Q.bm).filter(k=>Q.bm[k]).map(k=>+k+1).join(', ')||'none'}</p></div>`}
+function tick(){clearInterval(TM);TM=setInterval(()=>{if(!Q||Q.done)return clearInterval(TM);Q.t--;const e=$('#tm');if(e)e.textContent='⏱ '+Q.t+'s';if(Q.t<=0){toast('Time up – auto-submitted');finish()}},1000)}
+function finish(){clearInterval(TM);const u=U();let ok=0,wr=0;Q.qs.forEach((q,i)=>{if(Q.a[i]===undefined)return;q.o[Q.a[i]][1]?ok++:wr++});
+const sc=Math.max(0,ok-(Q.neg?wr*.25:0)),tot=Q.qs.length,perfect=ok==tot;
+const coins=ok*5+10+(perfect?25:0),xp=ok*10+20;u.coins+=coins;u.xp+=xp;
+DB.hist.push({u:u.u,s:sc,t:tot,sub:Q.sub=='All'?Q.qs[0].sub:Q.sub,d:Date.now(),f:Q.t>45});save();
+Q.done=true;Q.res={sc,ok,coins,xp};if(document.fullscreenElement)document.exitFullscreen();S.v='quiz';render();toast(`+${coins} 🪙 +${xp} XP`)}
+function review(){return`<div class="card" style="margin-top:14px"><h2>Result: ${Q.res.sc}/${Q.qs.length} · +${Q.res.coins}🪙 +${Q.res.xp}XP</h2>${Q.qs.map((q,i)=>`<p><b>${i+1}. ${q.q}</b> ${Q.bm[i]?'★':''}<br>${q.o.map((o,j)=>`<span class="pill" style="background:${o[1]?'#2bb673':Q.a[i]===j?'#e04848':'var(--mut)'}">${o[0]}</span>`).join('')}</p>`).join('')}</div>`}
+function board(u){const sc=S.sc||'all',rs=ranked(sc,u);
+return`<h2>🏆 Leaderboard</h2><div class="tabs">${['all','school','class','friends','weekly','monthly','yearly'].map(s=>`<button class="btn s ${sc==s?'y':''}" onclick="S.sc='${s}';render()">${s=='all'?'Global / All-time':s}</button>`).join('')}</div><div class="card scroll"><table><tr><th>Rank</th><th></th><th>Username</th><th>Coins</th><th>XP</th><th>Score</th><th>Accuracy</th></tr>${rs.map((r,i)=>`<tr><td>${['🥇','🥈','🥉'][i]||i+1}</td><td>${av(r.u,36)}</td><td>${nm(r.u)}</td><td>${r.u.coins}</td><td>${r.u.xp}</td><td>${r.s}</td><td>${r.acc}%</td></tr>`).join('')}</table></div>`}
+function shop(u){return`<h2>🛍️ Shop <span class="pill">🪙 ${u.coins}</span></h2><div class="grid">${ITEMS.map(it=>{const k=it.t+it.v,own=u.own.includes(k),eq=u[it.t]==it.v;
+const pv=it.t=='av'?av(it.v,56,u.frame):it.t=='theme'?`<div style="width:56px;height:56px;border-radius:14px;background:${THEMES[it.v]}"></div>`:it.t=='frame'?av(u.av,56,it.v):`<b style="color:${NCOL[it.v]||'inherit'};font-size:1.3em">${u.u}</b>`;
+return`<div class="card tilt" style="text-align:center">${pv}<p>${it.n}</p><button class="btn s ${own?'g':'y'}" onclick="buy('${it.t}',${it.v},${it.c})">${eq?'Equipped':own?'Equip':'🪙 '+it.c}</button></div>`}).join('')}</div>`}
+function buy(t,v,c){const u=U(),k=t+v,m={av:'av',theme:'theme',frame:'frame',col:'col'};
+if(!u.own.includes(k)){if(u.coins<c)return toast('Not enough coins');u.coins-=c;u.own.push(k)}
+u[m[t]]=v;save();theme();render()}
+function earned(u){const s=stats(u.u),b=[];if(s.n)b.push('Beginner');[['Bronze',100],['Silver',300],['Gold',600],['Platinum',1000],['Diamond',2000]].forEach(x=>u.xp>=x[1]&&b.push(x[0]));
+if(s.n>=10)b.push('Quiz Champion');if(s.h.some(x=>x.f))b.push('Fast Thinker');if(s.h.some(x=>x.s==x.t))b.push('Perfect Score');if(u.streak>=3)b.push('Daily Streak');if(rank(u)==1)b.push('Top Scorer','Weekly Winner');return[...b,...(u.badges||[])]}
+const BADGES=['Beginner','Bronze','Silver','Gold','Platinum','Diamond','Quiz Champion','Fast Thinker','Top Scorer','Perfect Score','Daily Streak','Weekly Winner'];
+function badges(u){const e=earned(u);return`<h2>🏅 Badges</h2><div class="grid">${BADGES.map(b=>`<div class="card tilt" style="text-align:center;opacity:${e.includes(b)?1:.35}"><div style="font-size:2.4em">${e.includes(b)?'🏅':'🔒'}</div><b>${b}</b></div>`).join('')}</div>`}
+function bars(d){const mx=Math.max(1,...d.map(x=>x[1]));return`<svg viewBox="0 0 ${d.length*60} 150" style="width:100%;max-width:520px">${d.map((x,i)=>`<rect x="${i*60+8}" y="${120-x[1]/mx*100}" width="44" height="${x[1]/mx*100}" rx="8" fill="var(--ac)"><animate attributeName="height" from="0" to="${x[1]/mx*100}" dur=".7s"/></rect><text x="${i*60+30}" y="${114-x[1]/mx*100}" text-anchor="middle" font-size="11" fill="currentColor">${x[1]}</text><text x="${i*60+30}" y="140" text-anchor="middle" font-size="10" fill="currentColor">${x[0]}</text>`).join('')}</svg>`}
+function stats(u){if(typeof u=='string'){const h=DB.hist.filter(x=>x.u==u);const s=h.reduce((a,b)=>a+b.s,0),t=h.reduce((a,b)=>a+b.t,0);return{n:h.length,s,acc:t?Math.round(100*s/t):0,h}}
+const s=stats(u.u),by={};s.h.forEach(x=>{by[x.sub]=by[x.sub]||[0,0];by[x.sub][0]+=x.s;by[x.sub][1]+=x.t});
+return`<h2>📊 My analytics</h2><div class="grid"><div class="card"><div class="mut">Accuracy</div><div class="big">${s.acc}%</div></div><div class="card"><div class="mut">Attempts</div><div class="big">${s.n}</div></div><div class="card"><div class="mut">Total score</div><div class="big">${s.s}</div></div></div>
+<div class="card" style="margin-top:14px"><h3>Recent quiz scores (%)</h3>${bars(s.h.slice(-8).map((x,i)=>['#'+(i+1),Math.round(100*x.s/x.t)]))}</div><div class="card" style="margin-top:14px"><h3>Subject performance (%)</h3>${bars(Object.entries(by).map(([k,v])=>[k.slice(0,6),Math.round(100*v[0]/v[1])]))}</div>
+<div style="margin-top:14px;display:flex;gap:8px"><button class="btn b" onclick="csv('mine')">Export report (CSV)</button><button class="btn y" onclick="print()">Print report card</button></div>`}
+function me(u){return`<h2>🪪 Student ID</h2><div class="card tilt" style="max-width:380px;display:flex;gap:14px;align-items:center">${av(u,90)}<div>${nm(u)}<br>${u.name}<br><span class="mut">${u.id}</span><br>${u.school} · ${u.cls}<br>Level ${lvl(u.xp)}</div>${qr(u.id)}</div>`}
+/* ADMIN */
+function adm(){const q=(S.q||'').toLowerCase(),us=DB.users.filter(u=>u.role=='student'&&(u.name+u.u+u.id).toLowerCase().includes(q));
+return`<h2>👥 Students</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><input style="max-width:240px" placeholder="Search…" value="${S.q||''}" oninput="S.q=this.value;render();document.querySelector('input').focus()"><button class="btn g" onclick="addS('student')">+ Add Student</button><button class="btn b" onclick="addS('admin')">+ Add Admin</button><button class="btn" onclick="delAll()">🗑 Remove All Students</button><button class="btn b" onclick="csv('all')">Export CSV</button><button class="btn y" onclick="ann()">📢 Announce</button></div>
+<div class="card scroll" style="margin-top:12px"><table><tr><th></th><th>Name / Username</th><th>ID</th><th>🪙</th><th>XP</th><th>Rank</th><th>Lvl</th><th>Quizzes</th><th>Score</th><th>Acc</th><th>Last login</th><th>Actions</th></tr>${us.map(u=>{const s=stats(u.u);return`<tr><td>${av(u,34)}</td><td>${u.name}<br>${nm(u)}</td><td>${u.id}</td><td>${u.coins}</td><td>${u.xp}</td><td>#${rank(u)}</td><td>${lvl(u.xp)}</td><td>${s.n}</td><td>${s.s}</td><td>${s.acc}%</td><td>${new Date(u.last).toLocaleDateString()}</td><td style="white-space:nowrap"><button class="btn s g" onclick="coin('${u.u}',50)">+🪙</button> <button class="btn s" onclick="coin('${u.u}',-50)">−🪙</button> <button class="btn s y" onclick="tog('${u.u}')">${u.on?'Disable':'Enable'}</button> <button class="btn s b" onclick="rp('${u.u}')">Reset pw</button> <button class="btn s" onclick="del('${u.u}')">🗑</button></td></tr>`}).join('')}</table></div>`}
+function coin(n,a){const u=DB.users.find(x=>x.u==n);u.coins=Math.max(0,u.coins+a);save();render()}
+function tog(n){const u=DB.users.find(x=>x.u==n);u.on=!u.on;save();render()}
+function rp(n){const u=DB.users.find(x=>x.u==n);u.pw=H('pass123');save();toast('Password reset to pass123')}
+function del(n){if(confirm('Delete '+n+'?')){DB.users=DB.users.filter(x=>x.u!=n);DB.hist=DB.hist.filter(x=>x.u!=n);save();render()}}
+function modal(title,fields,ok,label){const d=document.createElement('div');d.className='ov';d.innerHTML=`<div class="card mdl"><h3>${title}</h3>${fields.map(f=>f.t=='msg'?`<p>${f.l}</p>`:`<input id="m_${f.k}" type="${f.t||'text'}" placeholder="${f.l}">`).join('')}<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn s" id="mx">Cancel</button><button class="btn s g" id="mo">${label||'Save'}</button></div></div>`;document.body.append(d);
+d.querySelector('#mx').onclick=()=>d.remove();d.onclick=e=>{if(e.target==d)d.remove()};
+d.querySelector('#mo').onclick=()=>{const v={};fields.forEach(f=>{if(f.k)v[f.k]=d.querySelector('#m_'+f.k).value.trim()});if(ok(v)!==false)d.remove()};const i=d.querySelector('input');if(i)i.focus()}
+function addS(role){const st=role=='student';modal(st?'Add student':'Add admin',[{k:'n',l:'Full name'},{k:'u',l:'Unique username'},{k:'p',l:'Password',t:'password'},...(st?[{k:'s',l:'School/College'},{k:'c',l:'Class'}]:[])],v=>{if(!v.u||!v.p)return toast('Username and password required'),false;if(DB.users.some(x=>x.u.toLowerCase()==v.u.toLowerCase()))return toast('Username already taken'),false;
+const pre=st?'STU-':'ADM-',n=Math.max(1000,...DB.users.filter(x=>x.id.startsWith(pre)).map(x=>+x.id.slice(4)))+1;
+DB.users.push(mk({id:pre+n,u:v.u,name:v.n||v.u,pw:H(v.p),role:role,school:v.s||'—',cls:v.c||'—',coins:st?50:0}));save();render();toast((st?'Student':'Admin')+' added')},'Add')}
+function delAll(){const n=DB.users.filter(u=>u.role=='student').length;if(!n)return toast('No students to remove');modal('Remove all students',[{t:'msg',l:`This permanently deletes all ${n} students and their quiz history. Admins and Quiz Masters are kept.`}],()=>{DB.users=DB.users.filter(u=>u.role!='student');DB.hist=[];save();render();toast('All students removed')},'Remove all')}
+function ann(){modal('Send announcement',[{k:'m',l:'Message to all students'}],v=>{if(!v.m)return false;DB.notes.push(v.m);save();toast('Sent')},'Send')}
+function csv(m){const us=m=='mine'?[U()]:DB.users.filter(u=>u.role=='student');const r=[['ID','Username','Name','Email','School','Class','Coins','XP','Level','Quizzes','Accuracy'],...us.map(u=>{const s=stats(u.u);return[u.id,u.u,u.name,u.email,u.school,u.cls,u.coins,u.xp,lvl(u.xp),s.n,s.acc+'%']})];
+const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([r.map(x=>x.map(c=>`"${c??''}"`).join(',')).join('\n')],{type:'text/csv'}));a.download='students.csv';a.click()}
+function aan(){const st=DB.users.filter(u=>u.role=='student'),day=Date.now()-864e5,sc=DB.hist,pass=sc.filter(x=>x.s/x.t>=.4).length,all=st.reduce((a,u)=>a+u.coins,0);
+return`<h2>📈 Admin analytics</h2><div class="grid">${[['Total students',st.length],['Active students',st.filter(u=>u.on).length],['Quizzes taken',sc.length],['Questions',DB.qs.length],['Avg score',sc.length?Math.round(100*sc.reduce((a,b)=>a+b.s/b.t,0)/sc.length)+'%':'–'],['Pass %',sc.length?Math.round(100*pass/sc.length)+'%':'–'],['Coins in circulation',all],['Logins today',DB.users.filter(u=>u.last>day).length]].map(x=>`<div class="card tilt"><div class="mut">${x[0]}</div><div class="big">${x[1]}</div></div>`).join('')}</div><div class="card" style="margin-top:14px"><h3>XP by student</h3>${bars(st.map(u=>[u.u.slice(0,6),u.xp]))}</div>`}
+function qs(){return`<h2>❓ Question bank (${DB.qs.length})</h2><div class="card" style="max-width:520px"><input id="aq" placeholder="Question"><input id="as" placeholder="Subject"><input id="a1" placeholder="Correct answer"><input id="a2" placeholder="Wrong option 1"><input id="a3" placeholder="Wrong option 2"><input id="a4" placeholder="Wrong option 3"><button class="btn g" onclick="addQ()">Add question</button></div><div class="card scroll" style="margin-top:12px"><table>${DB.qs.map((q,i)=>`<tr><td>${q[0]}</td><td>${q[1]}</td><td>${q[2][q[3]]}</td><td><button class="btn s" onclick="DB.qs.splice(${i},1);save();render()">🗑</button></td></tr>`).join('')}</table></div>`}
+function addQ(){const g=i=>$('#'+i).value.trim();if(!g('aq')||!g('a1')||!g('a2'))return toast('Fill the fields');DB.qs.push([g('as')||'General',g('aq'),[g('a1'),g('a2'),g('a3')||'None',g('a4')||'All'],0]);save();render()}
+document.addEventListener('keydown',e=>{if(e.key!='Enter')return;const el=e.target;if(!el.matches||!el.matches('input,select')||el.type=='file'||el.type=='checkbox')return;const box=el.closest('.mdl,.auth');if(!box)return;e.preventDefault();
+const f=[...box.querySelectorAll('input:not([type=file]):not([type=checkbox]),select')],i=f.indexOf(el);
+if(i<f.length-1)f[i+1].focus();else{const b=box.classList.contains('mdl')?box.querySelector('#mo'):[...box.querySelectorAll(':scope > button')].pop();b&&b.click()}});
+load();render();
+</script></body></html>
